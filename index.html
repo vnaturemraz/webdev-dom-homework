@@ -38,6 +38,7 @@
     const commentElement = document.getElementById("comment-input");
     const date = new Date;
     
+    
     const comments = [
       {
         name: 'Глеб Фокин',
@@ -55,17 +56,19 @@
         isLiked: false,
       },
     ]
-   
 
+    
+   
+// Рендер
     const renderComment = ()=>{
       const commentHtml = comments.map((comment,index)=>{
-        return `<li class="comment">
+        return `<li class="comment" data-index='${index}'>
           <div class="comment-header">
             <div>${comment.name}</div>
             <div>${comment.date}</div>
           </div>
-          <div class="comment-body">
-            <div class="comment-text">
+          <div class="comment-body" >
+            <div class="comment-text" >
               ${comment.text}
             </div>
           </div>
@@ -78,14 +81,20 @@
         </li>`
     })
     .join('');
+
+    
     listElement.innerHTML=commentHtml
     initLikeListeners();
+    commentAnswerListeners();
     }
 
+    // Обработчик лайков
     const initLikeListeners = ()=>{
+
       const likeButtons = document.querySelectorAll('.like-button');
       for (const likeButton  of likeButtons) {
-        likeButton.addEventListener('click', ()=>{
+        likeButton.addEventListener('click', (event)=>{
+          event.stopPropagation();
           const index = likeButton.dataset.index;
           comments[index].likeCount+= comments[index].isLiked ? -1 : +1;
           comments[index].isLiked = !comments[index].isLiked;
@@ -95,10 +104,25 @@
       }
     
     }
-  
-      
-    
 
+     // Ответ на комментарий
+    const commentAnswerListeners = () =>{
+        const commentAnswers = document.querySelectorAll('.comment');
+        
+        for (const commentAnswer of commentAnswers) {
+            commentAnswer.addEventListener("click", () => {
+              const index = commentAnswer.dataset.index;
+              console.log(index);
+              commentElement.value = `> ${comments[index].text}
+               ${comments[index].name},  `;
+            })
+          }
+    }
+
+  
+  
+    
+// Новый комментарий
       
      const addNewComment = ()=>{
           nameInputElement.classList.remove("error");
@@ -114,9 +138,9 @@
           return;
         }
         comments.push({
-          name: nameInputElement.value,
+          name: nameInputElement.value.replaceAll('<','&lt;').replaceAll(">", "&gt;"),
           date: `${date.getDate()}.${date.getMonth()}.${date.getFullYear() - 2000} ${date.getHours()}:${date.getMinutes()}`,
-          text: commentElement.value,
+          text: commentElement.value.replaceAll('<','&lt;').replaceAll(">", "&gt;"),
           likeCount: 0,
           isLiked: false,
         })
@@ -125,12 +149,11 @@
         commentElement.value = "";
         renderComment();
       }
-      
-        
-    buttonElement.addEventListener("click",addNewComment);
-    
 
-   
+ 
+  
+  
+  buttonElement.addEventListener("click",addNewComment);
   renderComment();
   </script>
 </html>
