@@ -37,15 +37,43 @@
     const nameInputElement = document.getElementById("name-input");
     const commentElement = document.getElementById("comment-input");
     const date = new Date;
+    const personalKey = 'AlinaSh'
+
+    const commentsUrl = `https://wedev-api.sky.pro/api/v1/${personalKey}/comments`
+
+    const getComments = () =>{
+      return fetch(commentsUrl, {
+        method: 'GET',
+      }).then((response) => {
+        return response.json();
+    })
+    }
+
+    const postComments = (commentText, name) =>{
+      return fetch(commentsUrl,{
+        method: 'POST',
+        body: JSON.stringify({
+            text: commentText,
+            name: name,
+        }),
+      }).then((response) => {
+        return response.json();
+    })
+    }
     
-    
+   
+   
+
     const comments = [
       {
-        name: 'Глеб Фокин',
-        date: '12.02.22 12:18',
-        text:'Это будет первый комментарий на этой странице',
-        likeCount: 3,
-        isLiked: true,
+        "id": 2,
+            "date": "2023-01-01T08:19:00.916Z",
+            "likes": 0,
+            "isLiked": false,
+            "text": "Это мой первый комментарий",
+            "author": {
+                "name": "Глеб Фокин"
+            }
       },
       
       {
@@ -61,10 +89,11 @@
    
 // Рендер
     const renderComment = ()=>{
-      const commentHtml = comments.map((comment,index)=>{
+      getComments().then((res)=>{
+        const commentHtml = res.comments.map((comment,index)=>{
         return `<li class="comment" data-index='${index}'>
           <div class="comment-header">
-            <div>${comment.name}</div>
+            <div>${comment.author.name}</div>
             <div>${comment.date}</div>
           </div>
           <div class="comment-body" >
@@ -74,7 +103,7 @@
           </div>
           <div class="comment-footer">
             <div class="likes">
-              <span class="likes-counter">${comment.likeCount}</span>
+              <span class="likes-counter">${comment.likes}</span>
               <button class="like-button ${comment.isLiked ? '-active-like': ''}" data-index='${index}'></button>
             </div>
           </div>
@@ -86,6 +115,8 @@
     listElement.innerHTML=commentHtml
     initLikeListeners();
     commentAnswerListeners();
+      });
+      
     }
 
     // Обработчик лайков
@@ -137,6 +168,11 @@
           commentElement.classList.add("error");
           return;
         }
+
+        postComments(commentElement.value.replaceAll('<','&lt;').replaceAll(">", "&gt;"), nameInputElement.value.replaceAll('<','&lt;').replaceAll(">", "&gt;") ).then(()=>{
+          renderComment();
+        })
+      
         comments.push({
           name: nameInputElement.value.replaceAll('<','&lt;').replaceAll(">", "&gt;"),
           date: `${date.getDate()}.${date.getMonth()}.${date.getFullYear() - 2000} ${date.getHours()}:${date.getMinutes()}`,
