@@ -13,19 +13,31 @@
     <ul id="comments" class="comments">
     </ul>
     <div id="add-form" class="add-form">
-      <input id="add-name" type="text" class="add-form-name" placeholder="Введите ваше имя" />
-      <textarea id="add-text" type="textArea" class="add-form-text" placeholder="Введите ваш коментарий"
-        rows="4"></textarea>
+      <input 
+        id="add-name" 
+        type="text" 
+        class="add-form-name" 
+        placeholder="Введите ваше имя" />
+      <textarea 
+        id="add-text" 
+        type="textArea" 
+        class="add-form-text" 
+        placeholder="Введите ваш коментарий"
+        rows="4">
+      </textarea>
       <div class="add-form-row">
         <button id="add-form-button" class="add-form-button">Написать</button>
       </div>
     </div>
+    <div class="comment-loading">Комментарий добавляется...</div>
   </div>
 </body>
 
 <script>
   "use strict";
   // Поиск в именах id 
+  const commentLoadingElement = document.querySelector('.comment-loading');
+
   const buttonElement = document.getElementById("add-form-button");
   const listElement = document.getElementById("comments");
   const textAreaElement = document.getElementById("add-text");
@@ -76,14 +88,18 @@ function delay(interval = 2000) {
 
 let comments = [];
 
-  const getComments = () => {
+const getComments = () => {
     // buttonElement.disabled = false;
     // buttonElement.textContent = 'Добавление комментария';
     let fetchPromise = fetch(urlApi,
       {
         method: 'GET',
       }).then ((response) =>{
-        return response.json();
+        if (response.status === 200) {
+          return response.json();
+        }
+        throw new Error("Сервер сломался");
+        
       }).then((responseData) => {
 
         commentList = responseData.comments.map((comment) => {
@@ -95,10 +111,19 @@ let comments = [];
             likes: comment.likes,
             text: comment.text,
           };
-        });
+        })
+        
         console.log(commentList);
         renderComments();
-      });
+      }).catch((error) => {
+
+          if (error.message === "Сервер сломался") {
+            alert("Сервер сломался, попробуй позже");
+            return;
+          }
+
+          alert ('Кажется, у вас сломался интернет, попробуйте позже');
+        });
     }
   ;
   
@@ -199,6 +224,9 @@ let comments = [];
   }
   //Кнопка с добавлением коммента
   buttonElement.addEventListener("click", () => {
+    commentLoadingElement.classList.remove ('comment-loading');
+    outerFormElement.classList.add ('comment-loading');
+
     inputElement.classList.remove("error");
     if (inputElement.value === "") {
       inputElement.classList.add("error");
@@ -230,18 +258,48 @@ let comments = [];
       });
 
     fetchPromise.then((response) => {
-      const jsonPromise = response.json();
-      jsonPromise.then((responseData) => {
+        if (response.status === 500) {
+          throw new Error("Сервер сломался");
+        }
+
+        if (response.status === 400) {
+          throw new Error("Плохой запрос");
+        }
+        outerFormElement.style.display='non';
+      return response.json();
+      }).then((responseData) => {
         getComments();
       }).then((data) => {
         buttonElement.disabled = false;
-          buttonElement.textContent = "Добавить";
-      })
+        buttonElement.textContent = "Добавить";
+        commentLoadingElement.classList.add ('comment-loading');
+        outerFormElement.classList.remove ('comment-loading');
+        
+        inputElement.value = "";
+        textAreaElement.value = "";
+      }).catch((error) => {
+        buttonElement.disabled = false;
+        buttonElement.textContent = "Добавить";
+        if (error.message === "Сервер сломался") {
+          alert("Сервер сломался, попробуй позже");
+          return;
+        }
 
-    });
+        if (error.message === "Плохой запрос") {
+          alert("Ты сделал ошибку в запросе, исправь данные и попробуй снова");
+          return;
+        }
 
-    inputElement.value = "";
-    textAreaElement.value = "";
+        alert ('Кажется, у вас сломался интернет, попробуйте позже');
+        console.warn(error);
+        commentLoadingElement.classList.add ('comment-loading');
+        outerFormElement.classList.remove ('comment-loading');
+      });
+
+      
+    ;
+      
+
     renderComments();
   });
 
