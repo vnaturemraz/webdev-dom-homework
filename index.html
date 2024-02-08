@@ -242,6 +242,8 @@ const getComments = () => {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;");
     };
+
+    
     buttonElement.disabled = true;
     buttonElement.textContent = "Коммент добавлятся...";
    //3. необходимо добавлять в хранилище коммент (method POST).
