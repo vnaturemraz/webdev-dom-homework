@@ -147,3 +147,6 @@ body {
 .error {
   border: red 3px solid;
 }
+.comment-loading {
+  display: none;
+}
